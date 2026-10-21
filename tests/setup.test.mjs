@@ -6,7 +6,7 @@ function source(path) {
   return readFileSync(path, 'utf8');
 }
 
-test('casino background and responsive styles remain unchanged', () => {
+test('casino background and responsive breakpoints are present', () => {
   const stylesheet = source('src/style.css');
   const image = readFileSync('public/casino-atmosphere.png');
 
@@ -27,5 +27,18 @@ test('kiosk controls and member navigation remain connected', () => {
   assert.match(menu, /screen: 'promotions'/);
   assert.match(menu, /screen: 'points'/);
   assert.match(menu, /screen: 'account'/);
-  assert.match(application, /renderKiosk\(app, screen, member, screenContent\(\)\)/);
+  assert.match(application, /renderKiosk\(/);
+  assert.match(application, /inspectedReceipt/);
+});
+
+test('receipt tab and inspection modal remain separate', () => {
+  const kiosk = source('src/ui/kiosk.ts');
+  const receipt = source('src/ui/receipt.ts');
+  const stylesheet = source('src/style.css');
+
+  assert.match(kiosk, /data-action="take-receipt"/);
+  assert.match(receipt, /data-action="close-receipt"/);
+  assert.match(receipt, /aria-modal="true"/);
+  assert.match(stylesheet, /\.printed-receipt \{\s*position: absolute/);
+  assert.match(stylesheet, /\.receipt-modal-backdrop/);
 });

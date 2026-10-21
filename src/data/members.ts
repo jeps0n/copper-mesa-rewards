@@ -15,22 +15,21 @@ export interface Member {
   card: string;
 }
 
-
 export const members: Member[] = [
   {
-    name: 'Alex Rivera',
+    name: 'Alex Johnson',
     tier: 'Bronze',
     points: 1500,
-    card: '•••• 1042',
+    card: '•••• 7824',
   },
   {
-    name: 'Jordan Lee',
+    name: 'Peyton Campbell',
     tier: 'Silver',
     points: 3500,
-    card: '•••• 2086',
+    card: '•••• 1936',
   },
   {
-    name: 'Morgan Blake',
+    name: 'Tracy Harris',
     tier: 'Gold',
     points: 10000,
     card: '•••• 3091',
