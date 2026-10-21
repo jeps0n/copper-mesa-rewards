@@ -1,0 +1,35 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #f4e8d6;
+  background: #211b19;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+.welcome {
+  display: grid;
+  min-height: 100vh;
+  align-content: center;
+  justify-items: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.eyebrow {
+  color: #d8b77a;
+  letter-spacing: 0.08em;
+}
+
+h1 {
+  margin: 0;
+  color: #b87333;
+}
