@@ -1,6 +1,15 @@
 # Copper Mesa Rewards
 
-A fictional casino loyalty kiosk built with Vite and TypeScript.
+An interactive, fictional casino loyalty kiosk built with TypeScript and Vite.
+
+## Features
+
+- Three sample member cards with Bronze, Silver, and Gold tiers
+- Touchscreen navigation for Weekly Gifts, Promotions, Rewards Points, and My Account
+- Member-specific monthly offer amounts and point balances
+- A dedicated panel representing physical kiosk interactions
+
+Rewards redemption and receipt printing are not currently available.
 
 ## Local development
 
