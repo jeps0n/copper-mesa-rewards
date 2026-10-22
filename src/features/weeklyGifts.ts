@@ -1,22 +1,26 @@
-import { monthlyGiftPeriods } from '../data/giftSchedule';
+import { giftSchedule, monthlyGiftPeriods } from '../data/giftSchedule';
 import { weeklyGifts } from '../data/rewards';
-import type { MemberState } from '../data/session';
+import { memberStates, type MemberState } from '../data/session';
 
-const memberGiftHistory = new WeakMap<MemberState, Map<string, boolean>>();
+// Historical results are simulated only for gifts already expired at startup.
+const startupSchedule = giftSchedule();
+const historicalGiftKeys = new Set(
+  startupSchedule.periods
+    .filter((period) => startupSchedule.currentSecond > period.closesAt)
+    .map((period) => period.key),
+);
+
+const giftHistory = new Map<MemberState, Map<string, boolean>>(
+  memberStates.map((state) => [
+    state,
+    new Map(
+      [...historicalGiftKeys].map((key) => [key, Math.random() < 0.5]),
+    ),
+  ]),
+);
 
 function wasPreviouslyClaimed(state: MemberState, key: string): boolean {
-  let history = memberGiftHistory.get(state);
-
-  if (!history) {
-    history = new Map<string, boolean>();
-    memberGiftHistory.set(state, history);
-  }
-
-  if (!history.has(key)) {
-    history.set(key, Math.random() < 0.5);
-  }
-
-  return history.get(key) ?? false;
+  return giftHistory.get(state)?.get(key) ?? false;
 }
 
 export function renderWeeklyGifts(state: MemberState): string {
@@ -37,7 +41,7 @@ export function renderWeeklyGifts(state: MemberState): string {
 
         return `
           <article class="offer-card gift-card ${available ? 'featured' : 'offer-disabled'}">
-            <h3>WEEK ${period.index + 1}</h3>
+            <h3><span class="gift-week-label">WEEK</span> ${period.index + 1}</h3>
             <p>${weeklyGifts[period.giftIndex]}</p>
             <span class="gift-dates">${period.claimDates}</span>
             <button

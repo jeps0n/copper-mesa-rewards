@@ -115,7 +115,7 @@ function giftPeriodsForMonth(year: number, month: number): GiftPeriod[] {
         ? `${mondayDate}–${thursday}`
         : `${mondayDate} – ${thursdayDate}`,
       opensAt: calendarSecond(year, month, monday, 7),
-      closesAt: calendarSecond(year, month, thursday, 19),
+      closesAt: calendarSecond(year, month, thursday, 19, 0, 59),
     };
   });
 }

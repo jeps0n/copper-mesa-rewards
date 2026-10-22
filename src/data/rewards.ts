@@ -7,10 +7,10 @@ export const promotions: Record<Tier, { slot: number; dining: number }> = {
 };
 
 export const weeklyGifts = [
-  'Bluetooth Speaker Tumbler',
+  'Bluetooth Speaker',
   'Canvas Tote Bag',
-  'Electric Egg Cooker',
-  'Portable Neck Massager',
+  'Mystery Gift',
+  'Lattice Weave Basket',
   'Mini Waffle Maker',
 ];
 

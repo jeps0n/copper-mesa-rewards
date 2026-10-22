@@ -4,10 +4,11 @@ import { members } from './data/members';
 import type { Member, Screen } from './data/members';
 import { menuItems } from './data/menu';
 import {
-  activeGiftPeriod,
   millisecondsUntilGiftBoundary,
+  monthlyGiftPeriods,
 } from './data/giftSchedule';
 import { renderWeeklyGifts } from './features/weeklyGifts';
+import { validateClaim } from './features/claimValidation';
 import { renderPromotions } from './features/promotions';
 import { renderRewardsPoints } from './features/rewardsPoints';
 import { renderMyAccount } from './features/myAccount';
@@ -47,6 +48,68 @@ let focusBeforeReceiptModal: HTMLElement | null = null;
 let receiptAssistanceTimer: ReturnType<typeof setTimeout> | null = null;
 let receiptNeedsAssistance = false;
 let giftBoundaryTimer: ReturnType<typeof setTimeout> | null = null;
+let monthBoundaryTimer: ReturnType<typeof setTimeout> | null = null;
+let casinoClockTimer: ReturnType<typeof setInterval> | null = null;
+let previousClockOffset = Date.now() - performance.now();
+
+const clockJumpThresholdMs = 2000;
+
+const desktopLayout = window.matchMedia('(min-width: 1051px)');
+let contentResizeFrame: number | null = null;
+
+function fitMonitorContent(): void {
+  const touchscreen = app.querySelector<HTMLElement>('.touchscreen');
+  const content = touchscreen?.querySelector<HTMLElement>(
+    '.screen-body, .welcome-screen',
+  );
+
+  if (!touchscreen || !content) {
+    return;
+  }
+
+  content.style.zoom = '';
+
+  if (!desktopLayout.matches) {
+    return;
+  }
+
+  const header = touchscreen.querySelector<HTMLElement>('.kiosk-header');
+  const footer = touchscreen.querySelector<HTMLElement>('.kiosk-footer');
+
+  if (!header || !footer) {
+    return;
+  }
+
+  const availableHeight =
+    touchscreen.clientHeight - header.offsetHeight - footer.offsetHeight;
+  const requiredHeight = content.scrollHeight;
+
+  if (availableHeight > 0 && requiredHeight > availableHeight) {
+    content.style.zoom = String(availableHeight / requiredHeight);
+  }
+}
+
+function scheduleMonitorFit(): void {
+  if (contentResizeFrame !== null) {
+    cancelAnimationFrame(contentResizeFrame);
+  }
+
+  contentResizeFrame = requestAnimationFrame(() => {
+    contentResizeFrame = null;
+    fitMonitorContent();
+  });
+}
+
+function handleLayoutChange(event: MediaQueryListEvent): void {
+  if (event.matches) {
+    window.scrollTo(0, 0);
+  }
+
+  scheduleMonitorFit();
+}
+
+desktopLayout.addEventListener('change', handleLayoutChange);
+window.addEventListener('resize', scheduleMonitorFit);
 
 function scheduleGiftBoundaryUpdate(): void {
   if (giftBoundaryTimer !== null) {
@@ -69,6 +132,52 @@ function scheduleGiftBoundaryUpdate(): void {
       scheduleGiftBoundaryUpdate();
     }
   }, delay + 20);
+}
+
+function millisecondsUntilNextMonth(now = new Date()): number {
+  const currentMonth = monthKey(now);
+
+  let start = now.getTime();
+  let end = start + 32 * 24 * 60 * 60 * 1000;
+
+  while (end - start > 1) {
+    const midpoint = Math.floor((start + end) / 2);
+
+    if (monthKey(new Date(midpoint)) === currentMonth) {
+      start = midpoint;
+    } else {
+      end = midpoint;
+    }
+  }
+
+  return end - now.getTime();
+}
+
+function scheduleMonthBoundaryUpdate(): void {
+  if (monthBoundaryTimer !== null) {
+    clearTimeout(monthBoundaryTimer);
+  }
+
+  const displayedMonth = monthKey();
+  const delay = Math.min(
+    millisecondsUntilNextMonth() + 20,
+    24 * 60 * 60 * 1000,
+  );
+
+  monthBoundaryTimer = setTimeout(() => {
+    monthBoundaryTimer = null;
+
+    if (
+      monthKey() !== displayedMonth
+      && (screen === 'promotions' || screen === 'gifts')
+      && !receipt
+      && !inspectedReceipt
+    ) {
+      render();
+    } else {
+      scheduleMonthBoundaryUpdate();
+    }
+  }, delay);
 }
 
 function clearReceiptAssistance(): void {
@@ -159,7 +268,7 @@ function screenContent(): string {
         <h1>Copper Mesa <span>Rewards</span></h1>
         <p class="welcome-copy">Your stay. Your rewards.</p>
         <div class="welcome-divider"></div>
-        <p class="welcome-instruction">Swipe your member card to begin</p>
+        <p class="welcome-instruction">Insert or tap your member card to begin</p>
       </section>
     `;
   }
@@ -190,7 +299,34 @@ function screenContent(): string {
     `;
   }
 
-  const heading = menuItems.find((item) => item.screen === screen)?.title;
+  const title = menuItems.find((item) => item.screen === screen)?.title;
+  const casinoDate = new Date();
+  let headingDate = casinoDate;
+  let headingTimeZone = 'America/Los_Angeles';
+
+  if (screen === 'gifts') {
+    const firstGift = monthlyGiftPeriods(casinoDate).periods[0];
+
+    if (firstGift) {
+      const [giftYear, giftMonth] = firstGift.key.split('-').map(Number);
+
+      headingDate = new Date(Date.UTC(giftYear, giftMonth - 1, 1));
+      headingTimeZone = 'UTC';
+    }
+  }
+
+  const monthName = new Intl.DateTimeFormat('en-US', {
+    timeZone: headingTimeZone,
+    month: 'long',
+  }).format(headingDate).toUpperCase();
+  const year = new Intl.DateTimeFormat('en-US', {
+    timeZone: headingTimeZone,
+    year: 'numeric',
+  }).format(headingDate);
+
+  const heading = screen === 'gifts' || screen === 'promotions'
+    ? `${title} — <span class="heading-month">${monthName}</span> ${year}`
+    : title;
 
   let content = '';
   const state = activeState()!;
@@ -222,6 +358,46 @@ function screenContent(): string {
   `;
 }
 
+function startCasinoClock(): void {
+  if (casinoClockTimer !== null) {
+    clearInterval(casinoClockTimer);
+  }
+
+  function updateClock(): void {
+    const clockOffset = Date.now() - performance.now();
+    const clockJumped = Math.abs(
+      clockOffset - previousClockOffset,
+    ) > clockJumpThresholdMs;
+
+    previousClockOffset = clockOffset;
+
+    if (clockJumped) {
+      synchronizeAfterClockChange();
+    }
+
+    const clock = app.querySelector<HTMLElement>('.casino-clock');
+
+    if (!clock) {
+      return;
+    }
+
+    clock.textContent = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    }).format(new Date());
+  }
+
+  updateClock();
+  casinoClockTimer = setInterval(updateClock, 1000);
+}
+
 function render(): void {
   renderKiosk(
     app,
@@ -237,6 +413,9 @@ function render(): void {
   );
 
   scheduleGiftBoundaryUpdate();
+  scheduleMonthBoundaryUpdate();
+  scheduleMonitorFit();
+  startCasinoClock();
 }
 
 app.addEventListener('click', (event) => {
@@ -277,50 +456,42 @@ app.addEventListener('click', (event) => {
     const kind = redemptionButton.dataset.redeem;
     const promotion = promotions[member.tier];
 
-    if (kind === 'gift') {
-      const index = Number(redemptionButton.dataset.week);
-      const period = activeGiftPeriod();
+    if (kind === 'gift' || kind === 'slot' || kind === 'dining') {
+      const clickedAt = new Date();
+      const claim = validateClaim(redemptionButton, state, clickedAt);
 
-      if (
-        !period
-        || index !== period.index
-        || redemptionButton.dataset.giftKey !== period.key
-        || state.claimedWeeks.has(period.key)
-      ) {
+      if (!claim) {
+        render();
         return;
       }
 
-      state.claimedWeeks.add(period.key);
-      receipt = {
-        kind: 'gift',
-        title: 'WEEKLY GIFT',
-        description: `WEEK ${period.index + 1} GIFT`,
-        pickupDate: period.pickupDate,
-        issuedAt: new Date().toISOString(),
-      };
-      beginReceiptCollection();
-      showNotification('Gift claimed! Please take your receipt.');
-    } else if (kind === 'slot' || kind === 'dining') {
-      const key = `${monthKey()}-${kind}`;
-
-      if (state.claimedPromotions.has(key)) {
-        return;
-      }
-
-      state.claimedPromotions.add(key);
-
-      if (kind === 'slot') {
-        state.cardCredit += promotion.slot;
-        showNotification(`$${promotion.slot} Free Slot Play is on your card, ready to use.`);
-      } else {
+      if (claim.kind === 'gift') {
+        state.claimedWeeks.add(claim.key);
         receipt = {
-          kind: 'dining',
-          title: 'DINING VOUCHER',
-          description: `$${promotion.dining} Dining Credit`,
-          issuedAt: new Date().toISOString(),
+          kind: 'gift',
+          title: 'WEEKLY GIFT',
+          description: `WEEK ${claim.weekIndex + 1} GIFT`,
+          pickupDate: claim.pickupDate,
+          issuedAt: clickedAt.toISOString(),
         };
         beginReceiptCollection();
-        showNotification('Dining credit claimed! Please take your voucher.');
+        showNotification('Gift claimed! Please take your receipt.');
+      } else {
+        state.claimedPromotions.add(claim.key);
+
+        if (claim.kind === 'slot') {
+          state.cardCredit += promotion.slot;
+          showNotification(`$${promotion.slot} Free Slot Play is on your card, ready to use.`);
+        } else {
+          receipt = {
+            kind: 'dining',
+            title: 'DINING VOUCHER',
+            description: `$${promotion.dining} Dining Credit`,
+            issuedAt: clickedAt.toISOString(),
+          };
+          beginReceiptCollection();
+          showNotification('Dining credit claimed! Please take your voucher.');
+        }
       }
     } else if (kind === 'points') {
       if (state.points < pointsPerRedemption) {
@@ -385,6 +556,28 @@ app.addEventListener('click', (event) => {
     } else {
       app.querySelector<HTMLButtonElement>('.back-button:not(:disabled), .finish-button:not(:disabled), .menu-tile:not(:disabled)')?.focus();
     }
+  }
+});
+
+function synchronizeAfterClockChange(): void {
+  if (
+    (screen === 'gifts' || screen === 'promotions')
+    && !receipt
+    && !inspectedReceipt
+  ) {
+    render();
+    return;
+  }
+
+  scheduleGiftBoundaryUpdate();
+  scheduleMonthBoundaryUpdate();
+}
+
+window.addEventListener('focus', synchronizeAfterClockChange);
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    synchronizeAfterClockChange();
   }
 });
 

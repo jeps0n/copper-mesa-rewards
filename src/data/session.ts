@@ -35,7 +35,7 @@ export function pacificDate(
   };
 }
 
-export function monthKey(): string {
-  const { year, month } = pacificDate();
+export function monthKey(now = new Date()): string {
+  const { year, month } = pacificDate(now);
   return `${year}-${String(month).padStart(2, '0')}`;
 }

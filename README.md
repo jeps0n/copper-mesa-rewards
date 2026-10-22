@@ -1,29 +1,17 @@
 # Copper Mesa Rewards
 
-An interactive, fictional casino loyalty kiosk built with TypeScript and Vite.
+An interactive kiosk application for a fictional casino rewards program.
+
+**Live Application:** [View Copper Mesa Rewards](https://jeps0n.github.io/copper-mesa-rewards/)
 
 ## Features
 
-- Three sample member cards with Bronze, Silver, and Gold tiers
-- Touchscreen navigation for Weekly Gifts, Promotions, Rewards Points, and My Account
-- Member-specific monthly offer amounts and point balances
-- A physical card reader and receipt printer interface
-- Weekly gift claims and tier-specific monthly promotions
-- Points redemption into free slot play
-- Printed gift and dining vouchers with receipt inspection
+- Explore three demo member cards representing Bronze, Silver, and Gold tiers
+- Navigate gifts, promotions, and account information through a touchscreen interface.
+- View personalized monthly offers and rewards point balances
+- Interact with a simulated card reader and receipt printer
+- Claim weekly gifts and monthly promotions based on membership tier
+- Redeem rewards points for free slot play
+- Print gift and dining vouchers with receipt previews
 
 Member activity is stored in memory and resets when the page reloads.
-
-## Local development
-
-```bash
-npm install
-npm run dev
-npm test
-npm run build
-npm run preview
-```
-
-## Deployment
-
-Push to `main` to deploy through GitHub Actions. In repository Settings → Pages, set the source to **GitHub Actions**.

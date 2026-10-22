@@ -15,7 +15,7 @@ export function renderRewardsPoints(state: MemberState): string {
           <h3>${pointsPerRedemption.toLocaleString('en-US')} Points</h3>
           <p>Exchange for $${dollarsPerRedemption} Free Slot Play</p>
         </div>
-        <button class="offer-action" data-redeem="points" ${affordable ? '' : 'disabled'}>
+        <button class="offer-action points-action" data-redeem="points" ${affordable ? '' : 'disabled'}>
           ${affordable ? 'REDEEM POINTS' : 'INSUFFICIENT POINTS'}
         </button>
       </div>

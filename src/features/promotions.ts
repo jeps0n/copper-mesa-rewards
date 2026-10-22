@@ -5,8 +5,9 @@ import type { MemberState } from '../data/session';
 
 export function renderPromotions(member: Member, state: MemberState): string {
   const offers = promotions[member.tier];
-  const slotClaimed = state.claimedPromotions.has(`${monthKey()}-slot`);
-  const diningClaimed = state.claimedPromotions.has(`${monthKey()}-dining`);
+  const displayedMonth = monthKey();
+  const slotClaimed = state.claimedPromotions.has(`${displayedMonth}-slot`);
+  const diningClaimed = state.claimedPromotions.has(`${displayedMonth}-dining`);
 
   return `
     <p class="screen-intro">Your monthly offers as a ${member.tier} member.</p>
@@ -17,8 +18,8 @@ export function renderPromotions(member: Member, state: MemberState): string {
         <strong class="offer-value">$${offers.slot}</strong>
         <p>Loaded to your member card when claimed</p>
         ${slotClaimed
-          ? '<span class="status-label status-pill">CLAIMED</span>'
-          : '<button class="offer-action" data-redeem="slot">CLAIM OFFER</button>'}
+          ? '<button class="offer-action status-pill" type="button" disabled>CLAIMED</button>'
+          : `<button class="offer-action" data-redeem="slot" data-month="${displayedMonth}">CLAIM OFFER</button>`}
       </article>
       <article class="offer-card">
         <span class="offer-kicker">PRINTED VOUCHER</span>
@@ -26,8 +27,8 @@ export function renderPromotions(member: Member, state: MemberState): string {
         <strong class="offer-value">$${offers.dining}</strong>
         <p>Receive a dining voucher from the kiosk</p>
         ${diningClaimed
-          ? '<span class="status-label status-pill">CLAIMED</span>'
-          : '<button class="offer-action" data-redeem="dining">CLAIM OFFER</button>'}
+          ? '<button class="offer-action status-pill" type="button" disabled>CLAIMED</button>'
+          : `<button class="offer-action" data-redeem="dining" data-month="${displayedMonth}">CLAIM OFFER</button>`}
       </article>
     </div>
   `;

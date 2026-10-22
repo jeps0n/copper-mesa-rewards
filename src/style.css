@@ -230,6 +230,10 @@ h1 span {
   font-size: clamp(36px, 3.6vw, 58px);
 }
 
+.section-heading .heading-month {
+  font-size: 0.75em;
+}
+
 .section-heading > p:last-child,
 .screen-intro {
   color: #c8b19d;
@@ -361,6 +365,10 @@ h1 span {
   letter-spacing: 0.08em;
 }
 
+.gift-week-label {
+  font-size: 0.75em;
+}
+
 .gift-card p {
   margin: 0 0 14px;
 }
@@ -399,14 +407,6 @@ h1 span {
 .offer-value {
   color: #f4e8d6;
   font-size: 44px;
-}
-
-.status-label {
-  margin-top: auto;
-  color: #d8b77a;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
 }
 
 .points-panel {
@@ -469,6 +469,12 @@ h1 span {
 }
 
 .offer-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  width: 85%;
+  min-height: 44px;
   margin-top: auto;
   padding: 12px 15px;
   border: 1px solid #d8b77a;
@@ -484,16 +490,35 @@ h1 span {
   cursor: default;
 }
 
-.offer-action:hover:not(:disabled) {
+button.offer-action:hover:not(:disabled) {
   background: #825938;
 }
 
 .status-pill {
-  display: inline-block;
-  align-self: flex-start;
-  padding: 10px 12px;
-  border: 1px solid #786554;
-  border-radius: 5px;
+  border-color: #786554;
+  background: transparent;
+  color: #d8b77a;
+}
+
+.points-action {
+  flex-shrink: 0;
+  width: 205px;
+}
+
+.session-footer-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  min-width: 0;
+}
+
+.casino-clock {
+  color: #d8b77a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .result-message {
@@ -604,19 +629,27 @@ h1 span {
   }
 }
 
+.member-controls {
+  width: 100%;
+  min-width: 0;
+}
+
 .member-cards {
   display: grid;
+  justify-items: center;
   width: 100%;
-  gap: 12px;
+  gap: clamp(8px, 1.2vh, 12px);
 }
 
 .member-card {
   position: relative;
   display: flex;
   flex-direction: column;
+  width: min(100%, var(--member-card-width));
+  min-width: 0;
+  aspect-ratio: 85.6 / 53.98;
   gap: 6px;
-  min-height: 78px;
-  padding: 16px;
+  padding: clamp(8px, 1.2vh, 16px);
   border: 1px solid #a18a6d;
   border-radius: 8px;
   background: #4a3a31;
@@ -643,8 +676,8 @@ h1 span {
   position: absolute;
   top: 50%;
   right: 12px;
-  width: 88px;
-  height: 67px;
+  width: 48%;
+  aspect-ratio: 88 / 67;
   color: #c38c62;
   opacity: 0.25;
   pointer-events: none;
@@ -693,6 +726,8 @@ h1 span {
 }
 
 .physical-panel {
+  --member-card-width: 170px;
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -711,6 +746,7 @@ h1 span {
   position: relative;
   width: min(82%, 210px);
   height: 110px;
+  flex-shrink: 0;
   margin: 32px auto 16px;
   border: 2px solid #101214;
   border-radius: 5px;
@@ -735,7 +771,7 @@ h1 span {
 
 .reader-light {
   display: block;
-  width: 66%;
+  width: min(100%, calc(var(--member-card-width) * 0.66));
   height: 3px;
   margin: 5px auto;
   background: #7eb5a5;
@@ -1044,7 +1080,8 @@ h1 span {
     display: grid;
     place-items: center;
     min-height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: hidden;
     background: #19120f;
     perspective: var(--cabinet-perspective);
     perspective-origin: 50% 50%;
@@ -1116,8 +1153,8 @@ h1 span {
     position: relative;
     z-index: 1;
     width: 96vw;
-    height: 92vh;
-    min-height: 0;
+    height: max(92vh, 640px);
+    min-height: 640px;
     transform: rotateY(var(--cabinet-angle)) rotateX(var(--cabinet-tilt));
     transform-origin: center center;
     transform-style: flat;
@@ -1129,10 +1166,29 @@ h1 span {
       16px 18px 42px rgb(0 0 0 / 48%);
   }
 
+  .physical-panel {
+    --member-card-width: clamp(112px, 15vh, 170px);
+  }
+
   .touchscreen,
   .physical-panel {
     min-height: 0;
     height: 100%;
+  }
+
+  .touchscreen > .screen-body {
+    flex-shrink: 0;
+  }
+}
+
+@media (min-width: 1051px) and (max-height: 760px) {
+  body {
+    min-height: 695px;
+    overflow-y: auto;
+  }
+
+  #app {
+    min-height: 695px;
   }
 }
 
@@ -1171,6 +1227,8 @@ h1 span {
   }
 
   .physical-panel {
+    --member-card-width: min(170px, (100vw - 90px) / 3);
+
     min-height: 260px;
   }
 
@@ -1191,6 +1249,16 @@ h1 span {
   .kiosk-header,
   .kiosk-footer {
     padding: 16px;
+    gap: 8px;
+  }
+
+  .session-footer-controls {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .casino-clock {
+    white-space: normal;
   }
 
   .header-label {
@@ -1207,6 +1275,10 @@ h1 span {
 }
 
 @media (max-width: 420px) {
+  .physical-panel {
+    --member-card-width: 170px;
+  }
+
   .member-cards {
     grid-template-columns: minmax(0, 1fr);
   }

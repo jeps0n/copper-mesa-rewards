@@ -15,7 +15,7 @@ function memberControls(screen: Screen, member: Member | null): string {
   return screen === 'welcome'
     ? `
       <div class="reader-instruction">
-        <h2>SWIPE CARD</h2>
+        <h2>INSERT OR TAP CARD</h2>
         <p>Select a member card to begin</p>
       </div>
       <div class="member-cards">
@@ -40,7 +40,7 @@ function memberControls(screen: Screen, member: Member | null): string {
 
 function physicalPanel(screen: Screen, member: Member | null): string {
   return `
-    <div class="card-reader" aria-label="Card swipe reader">
+    <div class="card-reader" aria-label="Card insertion and contactless reader">
       <div class="reader-head"><span class="reader-light"></span></div>
       <div class="reader-channel"></div>
     </div>
@@ -106,7 +106,10 @@ export function renderKiosk(
     <footer class="kiosk-footer">
       <span>COPPER MESA REWARDS</span>
       ${member
-        ? '<button class="finish-button" data-action="finish">FINISH SESSION</button>'
+        ? `<div class="session-footer-controls">
+            <time class="casino-clock" aria-label="Casino local date and time"></time>
+            <button class="finish-button" data-action="finish">FINISH SESSION</button>
+          </div>`
         : '<span>WELCOME</span>'}
     </footer>
   `;
