@@ -10,7 +10,7 @@ export const weeklyGifts = [
   'Bluetooth Speaker',
   'Canvas Tote Bag',
   'Mystery Gift',
-  'Lattice Weave Basket',
+  'Football Jersey',
   'Mini Waffle Maker',
 ];
 

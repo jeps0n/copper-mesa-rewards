@@ -124,6 +124,11 @@ export function renderKiosk(
           ${physicalPanel(screen, member)}
         </aside>
       </main>
+      <div class="cabinet-signature" aria-label="Technical demonstration attribution">
+        <span class="signature-label">TECHNICAL DEMONSTRATION BY</span>
+        <span class="signature-author">jeff samson</span>
+        <span class="signature-tech">TYPESCRIPT · VITE</span>
+      </div>
     `;
 
     screenElement = app.querySelector<HTMLElement>('.touchscreen');
